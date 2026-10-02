@@ -1,4 +1,7 @@
-
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎰 Вегас Макс-Слоты 5 Линий</title>
     <style>
@@ -386,6 +389,7 @@ matrix[r][c] = sym;
 cells[r * 3 + c].innerText = sym;
 }
 }
+// Исправленные четкие координаты линий выплат
 const lines = [
 { name: "Л1", coords: [[0,0], [0,1], [0,2]] },
 { name: "Л2", coords: [[1,0], [1,1], [1,2]] },
@@ -441,7 +445,7 @@ document.querySelectorAll(".safe").forEach(s => s.innerText = "🧳");
 document.getElementById("bonus-modal").style.display = "flex";
 }
 function chooseSafe(index) {
-let mults =;
+let mults = [20, 50, 200]; // Исправлено: добавлены множители бонуса
 mults.sort(() => Math.random() - 0.5);
 let winAmount = betPerLine * mults[index];
 balance += winAmount;
@@ -456,4 +460,4 @@ endTurn();
 }
 
 
-      
+   
