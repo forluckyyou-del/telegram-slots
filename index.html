@@ -357,7 +357,7 @@ if (isSpinning) return;
 let totalBet = betPerLine * linesCount;
 if (balance < totalBet) {
 autoMode = false;
-document.getElementById("auto-btn").innerText = "АВТО: ВЫКЛ";
+document.getElementById("auto-btn").innerText = "АВTO: ВЫКЛ";
 document.getElementById("auto-btn").classList.remove("active");
 alert("Недостаточно фишек для ставки!");
 return;
@@ -383,35 +383,35 @@ function finalResult() {
 let cells = document.querySelectorAll(".slot-cell");
 let matrix = [[], [], []];
 for (let r = 0; r < 3; r++) {
+matrix.push([]);
 for (let c = 0; c < 3; c++) {
-let sym = activeSymbolList[Math.floor(Math.random() * activeSymbolList.length)];
-matrix[r][c] = sym;
-cells[r * 3 + c].innerText = sym;
+let idx = r * 3 + c;
+matrix.at(r).push(cells.at(idx).innerText);
 }
 }
-// Абсолютно защищенный формат линий без использования вложенных скобок
-let winLinesConfig = [
-"0,1,2",     // Линия 1 (верхняя горизонталь)
-"3,4,5",     // Линия 2 (средняя горизонталь)
-"6,7,8",     // Линия 3 (нижняя горизонталь)
-"0,4,8",     // Линия 4 (главная диагональ)
-"2,4,6"      // Линия 5 (побочная диагональ)
-];
+let winLinesConfig = ["0,1,2", "3,4,5", "6,7,8", "0,4,8", "2,4,6"];
 let totalWin = 0;
 let diamondCount = 0;
 let hasJackpot = false;
-matrix.forEach(row => row.forEach(sym => { if(sym === "💎") diamondCount++; }));
+for (let i = 0; i < 9; i++) {
+if (cells.at(i).innerText === "💎") {
+diamondCount++;
+}
+}
 winLinesConfig.forEach(lineStr => {
 let ids = lineStr.split(",").map(Number);
-let s1 = cells[ids[0]].innerText;
-let s2 = cells[ids[1]].innerText;
-let s3 = cells[ids[2]].innerText;
+let id1 = ids.at(0);
+let id2 = ids.at(1);
+let id3 = ids.at(2);
+let s1 = cells.at(id1).innerText;
+let s2 = cells.at(id2).innerText;
+let s3 = cells.at(id3).innerText;
 if (s1 === s2 && s2 === s3) {
 totalWin += betPerLine * symbols[s1];
 if (s1 === "7️⃣") hasJackpot = true;
-ids.forEach(id => {
-cells[id].classList.add("win-highlight");
-});
+cells.at(id1).classList.add("win-highlight");
+cells.at(id2).classList.add("win-highlight");
+cells.at(id3).classList.add("win-highlight");
 }
 });
 if (totalWin > 0) {
@@ -445,21 +445,23 @@ document.getElementById("bonus-result").innerText = "";
 document.querySelectorAll(".safe").forEach(s => s.innerText = "🧳");
 document.getElementById("bonus-modal").style.display = "flex";
 }
-function chooseSafe(index) {
-// Множители бонуса записаны в текстовом виде во избежание сбоев парсера
+function chooseSafe(safeIdx) {
 let multsData = "20,50,200";
 let mults = multsData.split(",").map(Number);
 mults.sort(() => Math.random() - 0.5);
-let winAmount = betPerLine * mults[index];
+let winAmount = betPerLine * mults.at(safeIdx);
 balance += winAmount;
 let safes = document.querySelectorAll(".safe");
-safes[index].innerText = "💰";
-document.getElementById("bonus-result").innerText = Вы нашли суперприз! Выигрыш: +${winAmount} фишек! (х${mults[index]});
+safes.forEach((s, idx) => {
+if (idx === safeIdx) {
+s.innerText = "💰";
+}
+});
+let currentMultiplier = mults.at(safeIdx);
+document.getElementById("bonus-result").innerText = Вы нашли суперприз! Выигрыш: +${winAmount} фишек! (х${currentMultiplier});
 playSound("win");
 setTimeout(() => {
 document.getElementById("bonus-modal").style.display = "none";
 endTurn();
 }, 2500);
 }
-
-
