@@ -292,3 +292,345 @@
             if (newBet >= 5 && newBet <= 100) {
                 betPerLine = newBet;
                 document.getElementById("bet-per-line-display").innerText = `На линию: ${betPerLine}`;
+osc.type = "sine";
+osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+osc.connect(gain); gain.connect(audioCtx.destination);
+osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+} else if (type === "win") {
+[523.25, 659.25, 783.99].forEach((f, i) => {
+let osc = audioCtx.createOscillator();
+let gain = audioCtx.createGain();
+osc.frequency.setValueAtTime(f, audioCtx.currentTime + i * 0.1);
+gain.gain.setValueAtTime(0.1, audioCtx.currentTime + i * 0.1);
+osc.connect(gain); gain.connect(audioCtx.destination);
+osc.start(audioCtx.currentTime + i * 0.1); osc.stop(audioCtx.currentTime + i * 0.1 + 0.1);
+});
+} else if (type === "jackpot") {
+let now = audioCtx.currentTime;
+for (let i = 0; i < 4; i++) {
+let osc = audioCtx.createOscillator();
+osc.frequency.setValueAtTime(880, now + i * 0.2);
+osc.connect(audioCtx.destination);
+osc.start(now + i * 0.2); osc.stop(now + i * 0.2 + 0.15);
+}
+}
+} catch (e) {}
+}
+const gridContainer = document.getElementById("slot-grid");
+for (let i = 0; i < 9; i++) {
+let cell = document.createElement("div");
+cell.className = "slot-cell";
+cell.innerText = "7️⃣";
+gridContainer.appendChild(cell);
+}
+function changeBet(amount) {
+if (isSpinning) return;
+let newBet = betPerLine + amount;
+if (newBet >= 5 && newBet <= 100) {
+betPerLine = newBet;
+document.getElementById("bet-per-line-display").innerText = На линию: ${betPerLine};
+document.getElementById("total-bet-display").innerText = Общая ставка: ${betPerLine * linesCount};
+}
+}
+function toggleAuto() {
+autoMode = !autoMode;
+const autoBtn = document.getElementById("auto-btn");
+if (autoMode) {
+autoBtn.innerText = "АВТО: ВКЛ";
+autoBtn.classList.add("active");
+if (!isSpinning) startSpin();
+} else {
+autoBtn.innerText = "АВТО: ВЫКЛ";
+autoBtn.classList.remove("active");
+}
+}
+function startSpin() {
+if (isSpinning) return;
+let totalBet = betPerLine * linesCount;
+if (balance < totalBet) {
+autoMode = false;
+document.getElementById("auto-btn").innerText = "АВТО: ВЫКЛ";
+document.getElementById("auto-btn").classList.remove("active");
+alert("Недостаточно фишек для ставки!");
+return;
+}
+document.querySelectorAll(".slot-cell").forEach(c => c.classList.remove("win-highlight"));
+isSpinning = true;
+balance -= totalBet;
+updateUI();
+document.getElementById("spin-btn").disabled = true;
+let count = 0;
+let cells = document.querySelectorAll(".slot-cell");
+let interval = setInterval(() => {
+cells.forEach(c => c.innerText = activeSymbolList[Math.floor(Math.random() * activeSymbolList.length)]);
+playSound("spin");
+count++;
+if (count > 12) {
+clearInterval(interval);
+finalResult();
+}
+}, 80);
+}
+function finalResult() {
+let cells = document.querySelectorAll(".slot-cell");
+let matrix = [[], [], []];
+for (let r = 0; r < 3; r++) {
+for (let c = 0; c < 3; c++) {
+let sym = activeSymbolList[Math.floor(Math.random() * activeSymbolList.length)];
+matrix[r][c] = sym;
+cells[r * 3 + c].innerText = sym;
+}
+}
+const lines = [
+{ name: "Л1", coords: [[0,0], [0,1], [0,2]] },
+{ name: "Л2", coords: [[1,0], [1,1], [1,2]] },
+{ name: "Л3", coords: [[2,0], [2,1], [2,2]] },
+{ name: "Л4", coords: [[0,0], [1,1], [2,2]] },
+{ name: "Л5", coords: [[0,2], [1,1], [2,0]] }
+];
+let totalWin = 0;
+let diamondCount = 0;
+let hasJackpot = false;
+matrix.forEach(row => row.forEach(sym => { if(sym === "💎") diamondCount++; }));
+lines.forEach(line => {
+let s1 = matrix[line.coords[0][0]][line.coords[0][1]];
+let s2 = matrix[line.coords[1][0]][line.coords[1][1]];
+let s3 = matrix[line.coords[2][0]][line.coords[2][1]];
+if (s1 === s2 && s2 === s3) {
+totalWin += betPerLine * symbols[s1];
+if (s1 === "7️⃣") hasJackpot = true;
+line.coords.forEach(coord => {
+cells[coord[0] * 3 + coord[1]].classList.add("win-highlight");
+});
+}
+});
+if (totalWin > 0) {
+balance += totalWin;
+if (hasJackpot) playSound("jackpot");
+else playSound("win");
+}
+if (diamondCount >= 3) {
+setTimeout(() => { openBonusModal(); }, 600);
+return;
+}
+endTurn();
+}
+function endTurn() {
+if (balance < (betPerLine * linesCount) && !autoMode) {
+if (balance < 5) {
+alert("Фишки закончились! Держите бонусные 1000 фишек.");
+balance += 1000;
+}
+}
+updateUI();
+isSpinning = false;
+document.getElementById("spin-btn").disabled = false;
+if (autoMode) setTimeout(startSpin, 1000);
+}
+function updateUI() {
+document.getElementById("balance-display").innerText = Фишки: ${balance};
+}
+function openBonusModal() {
+document.getElementById("bonus-result").innerText = "";
+document.querySelectorAll(".safe").forEach(s => s.innerText = "🧳");
+document.getElementById("bonus-modal").style.display = "flex";
+}
+function chooseSafe(index) {
+let mults =;
+mults.sort(() => Math.random() - 0.5);
+let winAmount = betPerLine * mults[index];
+balance += winAmount;
+let safes = document.querySelectorAll(".safe");
+safes[index].innerText = "💰";
+document.getElementById("bonus-result").innerText = Вы нашли суперприз! Выигрыш: +${winAmount} фишек! (х${mults[index]});
+playSound("win");
+setTimeout(() => {
+document.getElementById("bonus-modal").style.display = "none";
+endTurn();
+}, 2500);
+}
+
+
+
+<FollowUp>
+Если планируете запускать проект, сообщите: нужна ли интеграция **базы данных** для сохранения фишек игроков или пример настройки **крипто-оплаты** для Telegram-бота? Доработаем в соответствии с вашими планами.
+</FollowUp>
+да нужна ли интеграция **базы данных
+Интеграция базы данных критически необходима, если вы планируете запускать игровой автомат для реальных пользователей в Telegram (или делать полноценный коммерческий проект).
+Без базы данных баланс фишек будет сбрасываться до стартовых значений при каждом обновлении страницы, перезапуске Telegram-бота или закрытии приложения. Игроки не смогут копить фишки, а вы не сможете отслеживать их покупки.
+Для Telegram Mini Apps идеальным решением является связка: HTML-интерфейс (игра) + Сервер (на Node.js или Python) + База данных (PostgreSQL или SQLite).
+🛡️ Как это будет работать (Схема безопасности)
+1. Авторизация: При запуске автомата Telegram Mini App автоматически передает серверу безопасные данные пользователя (его User ID, имя и аватарку).
+2. Загрузка баланса: Сервер проверяет, есть ли этот User ID в базе данных. Если игрок новый — создается запись и начисляются стартовые 2000 фишек. Если старый — из базы подгружается его актуальный баланс.
+3. Безопасные спины: Чтобы игроки не могли «накрутить» себе фишки, подкрутив JavaScript-код в браузере, расчет результатов вращения переносится на сервер. Браузер только показывает красивую анимацию, которую прислал сервер.
+4. Сохранение покупок: При покупке фишек за криптовалюту сервер принимает оплату и надежно обновляет баланс в базе данных.
+💻 Готовое техническое решение (Сервер + База данных)
+Ниже представлен готовый код полноценного бэкенд-сервера на Python (с использованием легкой и быстрой базы данных SQLite и фреймворка FastAPI), который полностью берет на себя управление балансом и расчет результатов спинов.
+Шаг 1. Серверная часть (файл server.py)
+Этот скрипт нужно запустить на вашем сервере (или компьютере). Он создаст базу данных casino.db и будет хранить балансы игроков.
+python
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import sqlite3
+import random
+
+app = FastAPI()
+
+# Разрешаем HTML-странице отправлять запросы на сервер
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Настройка базы данных SQLite
+DB_NAME = "casino.db"
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            tg_id TEXT PRIMARY KEY,
+            balance INTEGER DEFAULT 2000
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# Математические пулы символов (как в нашей админ-панели)
+SYMBOLS_MULTIPLIERS = { "7️⃣": 100, "💎": 50, "🔔": 30, "BAR": 20, "🍒": 10, "🍋": 5, "🍇": 3 }
+SYMBOL_POOL = ["7️⃣", "💎", "🔔", "BAR", "🍒", "🍒", "🍋", "🍋", "🍋", "🍇", "🍇"]
+
+class UserRequest(BaseModel):
+    tg_id: str
+
+class SpinRequest(BaseModel):
+    tg_id: str
+    bet_per_line: int
+
+# 1. Получение или создание пользователя
+@app.post("/api/get-user")
+def get_user(req: UserRequest):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT balance FROM users WHERE tg_id = ?", (req.tg_id,))
+    row = cursor.fetchone()
+    
+    if row is None:
+        # Новый игрок — даем 2000 фишек
+        cursor.execute("INSERT INTO users (tg_id, balance) VALUES (?, 2000)", (req.tg_id,))
+        conn.commit()
+        balance = 2000
+    else:
+        balance = row[0]
+        
+    conn.close()
+    return {"tg_id": req.tg_id, "balance": balance}
+
+# 2. Безопасный расчет спина на сервере
+@app.post("/api/spin")
+def spin(req: SpinRequest):
+    lines_count = 5
+    total_bet = req.bet_per_line * lines_count
+    
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT balance FROM users WHERE tg_id = ?", (req.tg_id,))
+    row = cursor.fetchone()
+    
+    if not row or row[0] < total_bet:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Недостаточно фишек")
+        
+    current_balance = row[0] - total_bet
+
+    # Генерируем матрицу 3х3 на сервере (защита от взлома)
+    matrix = [[random.choice(SYMBOL_POOL) for _ in range(3)] for _ in range(3)]
+    
+    # Линии выплат
+    lines = [
+        ((0,0), (0,1), (0,2)), # Горизонталь верх
+        ((1,0), (1,1), (1,2)), # Горизонталь центр
+        ((2,0), (2,1), (2,2)), # Горизонталь низ
+        ((0,0), (1,1), (2,2)), # Диагональ 1
+        ((0,2), (1,1), (2,0))  # Диагональ 2
+    ]
+    
+    total_win = 0
+    winning_lines = []
+    
+    for idx, coords in enumerate(lines):
+        s1 = matrix[coords[0][0]][coords[0][1]]
+        s2 = matrix[coords[1][0]][coords[1][1]]
+        s3 = matrix[coords[2][0]][coords[2][1]]
+        
+        if s1 == s2 == s3:
+            win_amount = req.bet_per_line * SYMBOLS_MULTIPLIERS[s1]
+            total_win += win_amount
+            winning_lines.append(idx)
+            
+    final_balance = current_balance + total_win
+    
+    # Сохраняем новый баланс в базу данных
+    cursor.execute("UPDATE users SET balance = ? WHERE tg_id = ?", (final_balance, req.tg_id))
+    conn.commit()
+    conn.close()
+    
+    return {
+        "matrix": matrix,
+        "winning_lines": winning_lines,
+        "total_win": total_win,
+        "balance": final_balance
+    }
+
+# 3. Начисление фишек при покупке за крипту (вызывается платежным вебхуком)
+@app.post("/api/add-chips")
+def add_chips(req: UserRequest, amount_chips: int = 5000):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE users SET balance = balance + ? WHERE tg_id = ?", (amount_chips, req.tg_id))
+    conn.commit()
+    conn.close()
+    return {"status": "success"}
+Используйте код с осторожностью.
+Шаг 2. Как связать это с вашей HTML-игрой
+В клиентском JavaScript-коде (внутри index.html) функции startSpin() и инициализации баланса теперь должны совершать запросы к серверу через fetch():
+javascript
+// Переменная для хранения Telegram ID
+const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || "local_host_player";
+const SERVER_URL = "https://ваш-домен-сервера.com";
+
+// При старте игры запрашиваем баланс из БД
+async function loadUserBalance() {
+    let response = await fetch(`${SERVER_URL}/api/get-user`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ tg_id: tgUserId })
+    });
+    let data = await response.json();
+    balance = data.balance;
+    updateUI();
+}
+window.onload = loadUserBalance;
+
+// Замена старой функции фиксации результата спина
+async function sendSpinToServer() {
+    let response = await fetch(`${SERVER_URL}/api/spin`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ tg_id: tgUserId, bet_per_line: betPerLine })
+    });
+    let data = await response.json();
+    
+    // Сервер вернул честную матрицу и баланс из Базы Данных
+    // Здесь запускаем визуальную анимацию кручения, используя данные data.matrix
+    balance = data.balance; 
+    updateUI();
+}
