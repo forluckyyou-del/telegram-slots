@@ -437,17 +437,24 @@ document.querySelectorAll(".safe").forEach(s => s.innerText = "🧳");
 document.getElementById("bonus-modal").style.display = "flex";
 }
 function chooseSafe(index) {
-let mults =;
-mults.sort(() => Math.random() - 0.5);
-let winAmount = betPerLine * mults[index];
-balance += winAmount;
-let safes = document.querySelectorAll(".safe");
-safes[index].innerText = "💰";
-document.getElementById("bonus-result").innerText = Вы нашли суперприз! Выигрыш: +${winAmount} фишек! (х${mults[index]});
-playSound("win");
-setTimeout(() => {
-document.getElementById("bonus-modal").style.display = "none";
-endTurn();
-}, 2500);
-}
+ function chooseSafe(index) {
+            let mults =; // Исправлено: добавили коэффициенты для сейфов
+            mults.sort(() => Math.random() - 0.5);
+            
+            let winAmount = betPerLine * mults[index];
+            balance += winAmount;
+
+            let safes = document.querySelectorAll(".safe");
+            safes[index].innerText = "💰";
+            
+            // Исправлено: обернули текст в правильные косые кавычки `
+            document.getElementById("bonus-result").innerText = `Вы нашли суперприз! Выигрыш: +${winAmount} фишек! (х${mults[index]})`;
+            
+            playSound("win");
+
+            setTimeout(() => {
+                document.getElementById("bonus-modal").style.display = "none";
+                endTurn();
+            }, 2500);
+        }
 
