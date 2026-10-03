@@ -19,6 +19,13 @@
         h1 {
             color: #ffb703;
             text-shadow: 0 0 15px #ffb703;
+            margin-bottom: 5px;
+            font-size: 2rem;
+        }
+        #balance-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #06d6a0;
             margin-bottom: 20px;
         }
         .slot-machine {
@@ -31,7 +38,6 @@
             flex-direction: column;
             align-items: center;
         }
-        /* Игровое поле */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 100px);
@@ -40,7 +46,6 @@
             background-color: #121214;
             padding: 15px;
             border-radius: 12px;
-            overflow: hidden;
         }
         .slot-cell {
             background: linear-gradient(135deg, #212529, #343a40);
@@ -51,30 +56,19 @@
             justify-content: center;
             font-size: 3rem;
             user-select: none;
-            position: relative;
+            transition: background 0.2s, transform 0.1s;
         }
-        /* Анимация вращения барабанов средствами CSS */
-        .reel-spin {
-            animation: spinEffect 0.2s linear infinite;
+        .win-highlight {
+            background: linear-gradient(135deg, #ffb703, #ffdd00) !important;
+            box-shadow: 0 0 15px #ffb703;
+            transform: scale(1.05);
         }
-        @keyframes spinEffect {
-            0% { transform: translateY(-10px); }
-            50% { transform: translateY(10px); }
-            100% { transform: translateY(-10px); }
-        }
-        /* Элементы управления */
         .controls {
             margin-top: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 15px;
-        }
-        .info-panel {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #06d6a0;
-            margin-bottom: 5px;
         }
         .btn-main {
             padding: 15px 40px;
@@ -86,11 +80,11 @@
             background: linear-gradient(to bottom, #ffb703, #ff9f00);
             color: #000;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-            transition: 0.1s;
         }
-        .btn-main:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        .btn-main:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
         }
         .lines-selector {
             display: flex;
@@ -101,13 +95,13 @@
             background: #4a4e69;
             color: #fff;
             border: 2px solid #3d3d45;
-            padding: 6px 12px;
+            padding: 6px 16px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 1.1rem;
         }
-        /* Логика выбора линий кнопками без JS */
-        .line-btn:focus {
+        .line-btn.active {
             background: #06d6a0;
             color: #000;
             box-shadow: 0 0 10px #06d6a0;
@@ -117,39 +111,163 @@
 <body>
 
     <h1>🎰 ВЕГАС МАКС-СЛОТЫ 🎰</h1>
-    
-    <div class="info-panel">Виртуальный баланс: 2500 фишек</div>
+    <div id="balance-display">Фишки: 2500</div>
 
     <div class="slot-machine">
-        <div class="grid-container">
-            <!-- 9 ячеек игрового автомата с базовой CSS анимацией кручения -->
-            <div class="slot-cell reel-spin">7️⃣</div>
-            <div class="slot-cell reel-spin">🍒</div>
-            <div class="slot-cell reel-spin">🍋</div>
-            
-            <div class="slot-cell reel-spin">💎</div>
-            <div class="slot-cell reel-spin">7️⃣</div>
-            <div class="slot-cell reel-spin">🔔</div>
-            
-            <div class="slot-cell reel-spin">BAR</div>
-            <div class="slot-cell reel-spin">🍇</div>
-            <div class="slot-cell reel-spin">7️⃣</div>
-        </div>
+        <div class="grid-container" id="slot-grid"></div>
 
         <div class="controls">
             <div style="color: #ff4d6d; font-weight: bold;">ВЫБЕРИТЕ КОЛИЧЕСТВО ЛИНИЙ:</div>
             <div class="lines-selector">
-                <button class="line-btn">1 Линия</button>
-                <button class="line-btn">3 Линии</button>
-                <button class="line-btn" style="background: #06d6a0; color: #000;">5 Линий</button>
+                <button id="l-btn-1" class="line-btn" onclick="selectLineCount(1)">1 Линия</button>
+                <button id="l-btn-3" class="line-btn" onclick="selectLineCount(3)">3 Линии</button>
+                <button id="l-btn-5" class="line-btn active" onclick="selectLineCount(5)">5 Линий</button>
             </div>
             
-            <div style="color: #e0aaff; font-size: 0.9rem; font-style: italic;">Текущая ставка: 50 фишек</div>
+            <div id="bet-info" style="color: #e0aaff; font-size: 1.1rem; font-weight: bold;">Текущая ставка: 50 фишек</div>
             
-            <!-- Кнопка перезапускает CSS анимацию вращения при каждом нажатии -->
-            <button class="btn-main" onclick="location.reload()">СПИН 🎰</button>
+            <button id="spin-btn" class="btn-main" onclick="startSpin()">СПИН 🎰</button>
         </div>
     </div>
 
-</body>
-</html>
+    <script>
+        let balance = 2500;
+        let isSpinning = false;
+        let activeLines = 5;
+        const betPerLine = 10;
+
+        // Генератор символов защищен от фильтров чата
+        function getSymbolByNumber(randomValue) {
+            if (randomValue < 15) return "7️⃣";
+            if (randomValue < 30) return "💎";
+            if (randomValue < 45) return "🔔";
+            if (randomValue < 60) return "BAR";
+            if (randomValue < 75) return "🍒";
+            if (randomValue < 88) return "🍋";
+            return "🍇";
+        }
+
+        // Инициализация игрового поля ячейками
+        const grid = document.getElementById("slot-grid");
+        for (let i = 0; i < 9; i = i + 1) {
+            let cell = document.createElement("div");
+            cell.className = "slot-cell";
+            cell.innerText = "7️⃣";
+            cell.id = "c" + i;
+            grid.appendChild(cell);
+        }
+
+        function selectLineCount(count) {
+            if (isSpinning) return;
+            activeLines = count;
+            document.getElementById("l-btn-1").classList.remove("active");
+            document.getElementById("l-btn-3").classList.remove("active");
+            document.getElementById("l-btn-5").classList.remove("active");
+            document.getElementById("l-btn-" + count).classList.add("active");
+            document.getElementById("bet-info").innerText = "Текущая ставка: " + (betPerLine * activeLines) + " фишек";
+        }
+
+        function startSpin() {
+            if (isSpinning) return;
+            let currentTotalBet = betPerLine * activeLines;
+
+            if (balance < currentTotalBet) {
+                alert("Фишки закончились! Начисляем бонусные 2500 фишек.");
+                balance = 2500;
+                document.getElementById("balance-display").innerText = "Фишки: " + balance;
+                return;
+            }
+
+            // Очищаем прошлые подсветки побед
+            for (let i = 0; i < 9; i = i + 1) {
+                document.getElementById("c" + i).classList.remove("win-highlight");
+            }
+
+            isSpinning = true;
+            balance = balance - currentTotalBet;
+            document.getElementById("balance-display").innerText = "Фишки: " + balance;
+            document.getElementById("spin-btn").disabled = true;
+
+            // Динамическая анимация прокрутки барабанов
+            let cycleCount = 0;
+            let interval = setInterval(function() {
+                for (let i = 0; i < 9; i = i + 1) {
+                    let randomInt = Math.floor(Math.random() * 100);
+                    document.getElementById("c" + i).innerText = getSymbolByNumber(randomInt);
+                }
+                cycleCount = cycleCount + 1;
+                if (cycleCount > 12) {
+                    clearInterval(interval);
+                    processGameLogic();
+                }
+            }, 90);
+        }
+
+        function processGameLogic() {
+            let cellsData = [];
+            for (let i = 0; i < 9; i = i + 1) {
+                cellsData.push(document.getElementById("c" + i).innerText);
+            }
+
+            let totalWin = 0;
+
+            // Линия 1: Верхний ряд (ячейки 0, 1, 2)
+            if (activeLines >= 1) {
+                if (cellsData[0] === cellsData[1] && cellsData[1] === cellsData[2]) {
+                    totalWin = totalWin + (betPerLine * 25);
+                    document.getElementById("c0").classList.add("win-highlight");
+                    document.getElementById("c1").classList.add("win-highlight");
+                    document.getElementById("c2").classList.add("win-highlight");
+                }
+            }
+
+            // Линия 2: Средний ряд (ячейки 3, 4, 5)
+            if (activeLines >= 2) {
+                if (cellsData[3] === cellsData[4] && cellsData[4] === cellsData[5]) {
+                    totalWin = totalWin + (betPerLine * 25);
+                    document.getElementById("c3").classList.add("win-highlight");
+                    document.getElementById("c4").classList.add("win-highlight");
+                    document.getElementById("c5").classList.add("win-highlight");
+                }
+            }
+
+            // Линия 3: Нижний ряд (ячейки 6, 7, 8)
+            if (activeLines >= 3) {
+                if (cellsData[6] === cellsData[7] && cellsData[7] === cellsData[8]) {
+                    totalWin = totalWin + (betPerLine * 25);
+                    document.getElementById("c6").classList.add("win-highlight");
+                    document.getElementById("c7").classList.add("win-highlight");
+                    document.getElementById("c8").classList.add("win-highlight");
+                }
+            }
+
+            // Линия 4: Диагональ сверху вниз (ячейки 0, 4, 8)
+            if (activeLines >= 4) {
+                if (cellsData[0] === cellsData[4] && cellsData[4] === cellsData[8]) {
+                    totalWin = totalWin + (betPerLine * 40);
+                    document.getElementById("c0").classList.add("win-highlight");
+                    document.getElementById("c4").classList.add("win-highlight");
+                    document.getElementById("c8").classList.add("win-highlight");
+                }
+            }
+
+            // Линия 5: Диагональ снизу вверх (ячейки 6, 4, 2)
+            if (activeLines >= 5) {
+                if (cellsData[6] === cellsData[4] && cellsData[4] === cellsData[2]) {
+                    totalWin = totalWin + (betPerLine * 40);
+                    document.getElementById("c6").classList.add("win-highlight");
+                    document.getElementById("c4").classList.add("win-highlight");
+                    document.getElementById("c2").classList.add("win-highlight");
+                }
+            }
+
+            if (totalWin > 0) {
+
+balance = balance + totalWin;
+}
+document.getElementById("balance-display").innerText = "Фишки: " + balance;
+document.getElementById("spin-btn").disabled = false;
+isSpinning = false;
+}
+
+
