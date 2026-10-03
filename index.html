@@ -155,7 +155,17 @@
         let betPerLine = 10;
         let totalBet = 50;
 
-        const pool = ["7️⃣", "💎", "🔔", "BAR", "🍒", "🍋", "🍇", "🍒", "🍋", "🍇"];
+        // Генерация случайных символов без использования методов массивов
+        function getRandomSymbol() {
+            let num = Math.floor(Math.random() * 7);
+            if (num === 0) return "7️⃣";
+            if (num === 1) return "💎";
+            if (num === 2) return "🔔";
+            if (num === 3) return "BAR";
+            if (num === 4) return "🍒";
+            if (num === 5) return "🍋";
+            return "🍇";
+        }
 
         const grid = document.getElementById("slot-grid");
         for (let i = 0; i < 9; i = i + 1) {
@@ -228,8 +238,7 @@
             let count = 0;
             let interval = setInterval(function() {
                 for (let i = 0; i < 9; i = i + 1) {
-                    let randIndex = Math.floor(Math.random() * pool.length);
-                    document.getElementById("c" + i).innerText = pool.at(randIndex);
+                    document.getElementById("c" + i).innerText = getRandomSymbol();
                 }
                 count = count + 1;
                 if (count > 10) {
@@ -275,14 +284,13 @@
                     winAmount = winAmount + (betPerLine * 25);
                     document.getElementById("c6").classList.add("win-highlight");
                     document.getElementById("c7").classList.add("win-highlight");
-                    document.getElementById("c8").classList.add("win-highlight");
-                }
-            }
-
-            if (selectedLines >= 4) {
-                if (v0 === v4 && v4 === v8) {
-                    winAmount = winAmount + (betPerLine * 40);
 Используйте код с осторожностью.
+document.getElementById("c8").classList.add("win-highlight");
+}
+}
+if (selectedLines >= 4) {
+if (v0 === v4 && v4 === v8) {
+winAmount = winAmount + (betPerLine * 40);
 document.getElementById("c0").classList.add("win-highlight");
 document.getElementById("c4").classList.add("win-highlight");
 document.getElementById("c8").classList.add("win-highlight");
@@ -305,3 +313,5 @@ if (autoMode) {
 setTimeout(startSpin, 1000);
 }
 }
+
+
