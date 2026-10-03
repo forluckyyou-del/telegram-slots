@@ -125,14 +125,12 @@
         <div class="grid-container" id="slot-grid"></div>
         <div class="controls">
             
-            <!-- Выбор количества линий -->
             <div class="selector-container">
                 <button class="btn-select" onclick="changeLines(-1)">-</button>
                 <span id="lines-display">Линий: 5</span>
                 <button class="btn-select plus" onclick="changeLines(1)">+</button>
             </div>
 
-            <!-- Выбор ставки на одну линию -->
             <div class="selector-container">
                 <button class="btn-select" onclick="changeBetPerLine(-5)">-</button>
                 <span id="bet-display">На линию: 10</span>
@@ -231,7 +229,7 @@
             let interval = setInterval(function() {
                 for (let i = 0; i < 9; i = i + 1) {
                     let randIndex = Math.floor(Math.random() * pool.length);
-                    document.getElementById("c" + i).innerText = pool[randIndex];
+                    document.getElementById("c" + i).innerText = pool.at(randIndex);
                 }
                 count = count + 1;
                 if (count > 10) {
@@ -254,7 +252,6 @@
 
             let winAmount = 0;
 
-            // Проверка линии 1 (Горизонталь верх) — активна всегда, если выбрано >= 1 линий
             if (selectedLines >= 1) {
                 if (v0 === v1 && v1 === v2) {
                     winAmount = winAmount + (betPerLine * 25);
@@ -264,7 +261,6 @@
                 }
             }
             
-            // Проверка линии 2 (Горизонталь центр) — активна, если выбрано >= 2 линий
             if (selectedLines >= 2) {
                 if (v3 === v4 && v4 === v5) {
                     winAmount = winAmount + (betPerLine * 25);
@@ -274,26 +270,24 @@
                 }
             }
 
-            // Проверка линии 3 (Горизонталь низ) — активна, если выбрано >= 3 линий
             if (selectedLines >= 3) {
                 if (v6 === v7 && v7 === v8) {
                     winAmount = winAmount + (betPerLine * 25);
                     document.getElementById("c6").classList.add("win-highlight");
+                    document.getElementById("c7").classList.add("win-highlight");
+                    document.getElementById("c8").classList.add("win-highlight");
+                }
+            }
+
+            if (selectedLines >= 4) {
+                if (v0 === v4 && v4 === v8) {
+                    winAmount = winAmount + (betPerLine * 40);
 Используйте код с осторожностью.
-document.getElementById("c7").classList.add("win-highlight");
-document.getElementById("c8").classList.add("win-highlight");
-}
-}
-// Проверка линии 4 (Диагональ сверху-вниз) — активна, если выбрано >= 4 линий
-if (selectedLines >= 4) {
-if (v0 === v4 && v4 === v8) {
-winAmount = winAmount + (betPerLine * 40);
 document.getElementById("c0").classList.add("win-highlight");
 document.getElementById("c4").classList.add("win-highlight");
 document.getElementById("c8").classList.add("win-highlight");
 }
 }
-// Проверка линии 5 (Диагональ снизу-вверх) — активна, если выбрано 5 линий
 if (selectedLines >= 5) {
 if (v6 === v4 && v4 === v2) {
 winAmount = winAmount + (betPerLine * 40);
@@ -311,5 +305,3 @@ if (autoMode) {
 setTimeout(startSpin, 1000);
 }
 }
-
-
