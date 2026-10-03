@@ -112,10 +112,8 @@
         let autoMode = false;
         const bet = 50;
 
-        // Безопасный массив символов
         const pool = ["7️⃣", "💎", "🔔", "BAR", "🍒", "🍋", "🍇", "🍒", "🍋", "🍇"];
 
-        // Генерация ячеек при старте
         const grid = document.getElementById("slot-grid");
         for (let i = 0; i < 9; i = i + 1) {
             let cell = document.createElement("div");
@@ -144,13 +142,12 @@
                 autoMode = false;
                 document.getElementById("auto-btn").innerText = "АВТО: ВЫКЛ";
                 document.getElementById("auto-btn").classList.remove("active");
-                alert("У вас закончились фишки! Мы дарим вам баланс 2000.");
+                alert("Фишки закончились! Начисляем бонусные 2000 фишек.");
                 balance = 2000;
                 document.getElementById("balance-display").innerText = "Фишки: " + balance;
                 return;
             }
 
-            // Сброс победной подсветки
             for (let i = 0; i < 9; i = i + 1) {
                 document.getElementById("c" + i).classList.remove("win-highlight");
             }
@@ -163,7 +160,7 @@
             let interval = setInterval(function() {
                 for (let i = 0; i < 9; i = i + 1) {
                     let randIndex = Math.floor(Math.random() * pool.length);
-                    document.getElementById("c" + i).innerText = pool.at(randIndex);
+                    document.getElementById("c" + i).innerText = pool[randIndex];
                 }
                 count = count + 1;
                 if (count > 10) {
@@ -186,35 +183,30 @@
 
             let winAmount = 0;
 
-            // Проверка линии 1 (Горизонталь верх)
             if (v0 === v1 && v1 === v2) {
                 winAmount = winAmount + 250;
                 document.getElementById("c0").classList.add("win-highlight");
                 document.getElementById("c1").classList.add("win-highlight");
                 document.getElementById("c2").classList.add("win-highlight");
             }
-            // Проверка линии 2 (Горизонталь центр)
             if (v3 === v4 && v4 === v5) {
                 winAmount = winAmount + 250;
                 document.getElementById("c3").classList.add("win-highlight");
                 document.getElementById("c4").classList.add("win-highlight");
                 document.getElementById("c5").classList.add("win-highlight");
             }
-            // Проверка линии 3 (Горизонталь низ)
             if (v6 === v7 && v7 === v8) {
                 winAmount = winAmount + 250;
                 document.getElementById("c6").classList.add("win-highlight");
                 document.getElementById("c7").classList.add("win-highlight");
                 document.getElementById("c8").classList.add("win-highlight");
             }
-            // Проверка линии 4 (Диагональ сверху-вниз)
             if (v0 === v4 && v4 === v8) {
                 winAmount = winAmount + 400;
                 document.getElementById("c0").classList.add("win-highlight");
                 document.getElementById("c4").classList.add("win-highlight");
                 document.getElementById("c8").classList.add("win-highlight");
             }
-            // Проверка линии 5 (Диагональ снизу-вверх)
             if (v6 === v4 && v4 === v2) {
                 winAmount = winAmount + 400;
                 document.getElementById("c6").classList.add("win-highlight");
