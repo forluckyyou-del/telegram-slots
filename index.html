@@ -66,7 +66,27 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+        }
+        .selector-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        .btn-select {
+            background-color: #ff4d6d;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-select.plus {
+            background-color: #06d6a0;
         }
         .btn-main {
             padding: 12px 30px;
@@ -88,6 +108,12 @@
             background: #06d6a0;
             color: #000;
         }
+        #total-bet-display {
+            color: #ff4d6d;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -98,8 +124,24 @@
     <div class="slot-machine">
         <div class="grid-container" id="slot-grid"></div>
         <div class="controls">
-            <div style="color: #ff4d6d; font-weight: bold; margin-bottom: 5px;">Ставка: 50 фишек (5 линий)</div>
-            <div>
+            
+            <!-- Выбор количества линий -->
+            <div class="selector-container">
+                <button class="btn-select" onclick="changeLines(-1)">-</button>
+                <span id="lines-display">Линий: 5</span>
+                <button class="btn-select plus" onclick="changeLines(1)">+</button>
+            </div>
+
+            <!-- Выбор ставки на одну линию -->
+            <div class="selector-container">
+                <button class="btn-select" onclick="changeBetPerLine(-5)">-</button>
+                <span id="bet-display">На линию: 10</span>
+                <button class="btn-select plus" onclick="changeBetPerLine(5)">+</button>
+            </div>
+
+            <div id="total-bet-display">Общая ставка: 50 фишек</div>
+
+            <div style="margin-top: 10px;">
                 <button id="spin-btn" class="btn-main" onclick="startSpin()">СПИН</button>
                 <button id="auto-btn" class="btn-main" onclick="toggleAuto()">АВТО: ВЫКЛ</button>
             </div>
@@ -110,7 +152,10 @@
         let balance = 2000;
         let isSpinning = false;
         let autoMode = false;
-        const bet = 50;
+        
+        let selectedLines = 5;
+        let betPerLine = 10;
+        let totalBet = 50;
 
         const pool = ["7️⃣", "💎", "🔔", "BAR", "🍒", "🍋", "🍇", "🍒", "🍋", "🍇"];
 
@@ -121,6 +166,32 @@
             cell.innerText = "7️⃣";
             cell.id = "c" + i;
             grid.appendChild(cell);
+        }
+
+        function updateUI() {
+            totalBet = betPerLine * selectedLines;
+            document.getElementById("lines-display").innerText = "Линий: " + selectedLines;
+            document.getElementById("bet-display").innerText = "На линию: " + betPerLine;
+            document.getElementById("total-bet-display").innerText = "Общая ставка: " + totalBet + " фишек";
+            document.getElementById("balance-display").innerText = "Фишки: " + balance;
+        }
+
+        function changeLines(amount) {
+            if (isSpinning) return;
+            let nextLines = selectedLines + amount;
+            if (nextLines >= 1 && nextLines <= 5) {
+                selectedLines = nextLines;
+                updateUI();
+            }
+        }
+
+        function changeBetPerLine(amount) {
+            if (isSpinning) return;
+            let nextBet = betPerLine + amount;
+            if (nextBet >= 5 && nextBet <= 100) {
+                betPerLine = nextBet;
+                updateUI();
+            }
         }
 
         function toggleAuto() {
@@ -138,13 +209,13 @@
 
         function startSpin() {
             if (isSpinning) return;
-            if (balance < bet) {
+            if (balance < totalBet) {
                 autoMode = false;
                 document.getElementById("auto-btn").innerText = "АВТО: ВЫКЛ";
                 document.getElementById("auto-btn").classList.remove("active");
                 alert("Фишки закончились! Начисляем бонусные 2000 фишек.");
                 balance = 2000;
-                document.getElementById("balance-display").innerText = "Фишки: " + balance;
+                updateUI();
                 return;
             }
 
@@ -153,8 +224,8 @@
             }
 
             isSpinning = true;
-            balance = balance - bet;
-            document.getElementById("balance-display").innerText = "Фишки: " + balance;
+            balance = balance - totalBet;
+            updateUI();
 
             let count = 0;
             let interval = setInterval(function() {
@@ -183,48 +254,62 @@
 
             let winAmount = 0;
 
-            if (v0 === v1 && v1 === v2) {
-                winAmount = winAmount + 250;
-                document.getElementById("c0").classList.add("win-highlight");
-                document.getElementById("c1").classList.add("win-highlight");
-                document.getElementById("c2").classList.add("win-highlight");
+            // Проверка линии 1 (Горизонталь верх) — активна всегда, если выбрано >= 1 линий
+            if (selectedLines >= 1) {
+                if (v0 === v1 && v1 === v2) {
+                    winAmount = winAmount + (betPerLine * 25);
+                    document.getElementById("c0").classList.add("win-highlight");
+                    document.getElementById("c1").classList.add("win-highlight");
+                    document.getElementById("c2").classList.add("win-highlight");
+                }
             }
-            if (v3 === v4 && v4 === v5) {
-                winAmount = winAmount + 250;
-                document.getElementById("c3").classList.add("win-highlight");
-                document.getElementById("c4").classList.add("win-highlight");
-                document.getElementById("c5").classList.add("win-highlight");
-            }
-            if (v6 === v7 && v7 === v8) {
-                winAmount = winAmount + 250;
-                document.getElementById("c6").classList.add("win-highlight");
-                document.getElementById("c7").classList.add("win-highlight");
-                document.getElementById("c8").classList.add("win-highlight");
-            }
-            if (v0 === v4 && v4 === v8) {
-                winAmount = winAmount + 400;
-                document.getElementById("c0").classList.add("win-highlight");
-                document.getElementById("c4").classList.add("win-highlight");
-                document.getElementById("c8").classList.add("win-highlight");
-            }
-            if (v6 === v4 && v4 === v2) {
-                winAmount = winAmount + 400;
-                document.getElementById("c6").classList.add("win-highlight");
-                document.getElementById("c4").classList.add("win-highlight");
-                document.getElementById("c2").classList.add("win-highlight");
+            
+            // Проверка линии 2 (Горизонталь центр) — активна, если выбрано >= 2 линий
+            if (selectedLines >= 2) {
+                if (v3 === v4 && v4 === v5) {
+                    winAmount = winAmount + (betPerLine * 25);
+                    document.getElementById("c3").classList.add("win-highlight");
+                    document.getElementById("c4").classList.add("win-highlight");
+                    document.getElementById("c5").classList.add("win-highlight");
+                }
             }
 
-            if (winAmount > 0) {
-                balance = balance + winAmount;
-            }
+            // Проверка линии 3 (Горизонталь низ) — активна, если выбрано >= 3 линий
+            if (selectedLines >= 3) {
+                if (v6 === v7 && v7 === v8) {
+                    winAmount = winAmount + (betPerLine * 25);
+                    document.getElementById("c6").classList.add("win-highlight");
+Используйте код с осторожностью.
+document.getElementById("c7").classList.add("win-highlight");
+document.getElementById("c8").classList.add("win-highlight");
+}
+}
+// Проверка линии 4 (Диагональ сверху-вниз) — активна, если выбрано >= 4 линий
+if (selectedLines >= 4) {
+if (v0 === v4 && v4 === v8) {
+winAmount = winAmount + (betPerLine * 40);
+document.getElementById("c0").classList.add("win-highlight");
+document.getElementById("c4").classList.add("win-highlight");
+document.getElementById("c8").classList.add("win-highlight");
+}
+}
+// Проверка линии 5 (Диагональ снизу-вверх) — активна, если выбрано 5 линий
+if (selectedLines >= 5) {
+if (v6 === v4 && v4 === v2) {
+winAmount = winAmount + (betPerLine * 40);
+document.getElementById("c6").classList.add("win-highlight");
+document.getElementById("c4").classList.add("win-highlight");
+document.getElementById("c2").classList.add("win-highlight");
+}
+}
+if (winAmount > 0) {
+balance = balance + winAmount;
+}
+updateUI();
+isSpinning = false;
+if (autoMode) {
+setTimeout(startSpin, 1000);
+}
+}
 
-            document.getElementById("balance-display").innerText = "Фишки: " + balance;
-            isSpinning = false;
 
-            if (autoMode) {
-                setTimeout(startSpin, 1000);
-            }
-        }
-    </script>
-</body>
-</html>
