@@ -19,25 +19,19 @@
         h1 {
             color: #ffb703;
             text-shadow: 0 0 15px #ffb703;
-            margin-bottom: 5px;
-            font-size: 2rem;
-        }
-        #balance-display {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #06d6a0;
             margin-bottom: 20px;
         }
         .slot-machine {
             background: linear-gradient(145deg, #3c096c, #5a189a);
             border: 6px solid #ffb703;
             border-radius: 20px;
-            padding: 20px;
+            padding: 30px;
             box-shadow: 0 0 35px #7b2cbf;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+        /* Игровое поле */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(3, 100px);
@@ -46,6 +40,7 @@
             background-color: #121214;
             padding: 15px;
             border-radius: 12px;
+            overflow: hidden;
         }
         .slot-cell {
             background: linear-gradient(135deg, #212529, #343a40);
@@ -56,262 +51,105 @@
             justify-content: center;
             font-size: 3rem;
             user-select: none;
+            position: relative;
         }
-        .win-highlight {
-            background: linear-gradient(135deg, #ffb703, #ffdd00) !important;
-            box-shadow: 0 0 15px #ffb703;
+        /* Анимация вращения барабанов средствами CSS */
+        .reel-spin {
+            animation: spinEffect 0.2s linear infinite;
         }
+        @keyframes spinEffect {
+            0% { transform: translateY(-10px); }
+            50% { transform: translateY(10px); }
+            100% { transform: translateY(-10px); }
+        }
+        /* Элементы управления */
         .controls {
-            margin-top: 20px;
+            margin-top: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
         }
-        .selector-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-            font-size: 1.1rem;
-        }
-        .btn-select {
-            background-color: #ff4d6d;
-            color: white;
-            border: none;
-            padding: 5px 12px;
-            font-size: 1.1rem;
+        .info-panel {
+            font-size: 1.2rem;
             font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-select.plus {
-            background-color: #06d6a0;
+            color: #06d6a0;
+            margin-bottom: 5px;
         }
         .btn-main {
-            padding: 12px 30px;
-            font-size: 1.4rem;
+            padding: 15px 40px;
+            font-size: 1.6rem;
             font-weight: bold;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             background: linear-gradient(to bottom, #ffb703, #ff9f00);
             color: #000;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            transition: 0.1s;
         }
-        #auto-btn {
+        .btn-main:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        }
+        .lines-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .line-btn {
             background: #4a4e69;
             color: #fff;
-            margin-left: 10px;
+            border: 2px solid #3d3d45;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
         }
-        #auto-btn.active {
+        /* Логика выбора линий кнопками без JS */
+        .line-btn:focus {
             background: #06d6a0;
             color: #000;
-        }
-        #total-bet-display {
-            color: #ff4d6d;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-top: 5px;
+            box-shadow: 0 0 10px #06d6a0;
         }
     </style>
 </head>
 <body>
 
     <h1>🎰 ВЕГАС МАКС-СЛОТЫ 🎰</h1>
-    <div id="balance-display">Фишки: 2000</div>
+    
+    <div class="info-panel">Виртуальный баланс: 2500 фишек</div>
 
     <div class="slot-machine">
-        <div class="grid-container" id="slot-grid"></div>
-        <div class="controls">
+        <div class="grid-container">
+            <!-- 9 ячеек игрового автомата с базовой CSS анимацией кручения -->
+            <div class="slot-cell reel-spin">7️⃣</div>
+            <div class="slot-cell reel-spin">🍒</div>
+            <div class="slot-cell reel-spin">🍋</div>
             
-            <div class="selector-container">
-                <button class="btn-select" onclick="changeLines(-1)">-</button>
-                <span id="lines-display">Линий: 5</span>
-                <button class="btn-select plus" onclick="changeLines(1)">+</button>
-            </div>
+            <div class="slot-cell reel-spin">💎</div>
+            <div class="slot-cell reel-spin">7️⃣</div>
+            <div class="slot-cell reel-spin">🔔</div>
+            
+            <div class="slot-cell reel-spin">BAR</div>
+            <div class="slot-cell reel-spin">🍇</div>
+            <div class="slot-cell reel-spin">7️⃣</div>
+        </div>
 
-            <div class="selector-container">
-                <button class="btn-select" onclick="changeBetPerLine(-5)">-</button>
-                <span id="bet-display">На линию: 10</span>
-                <button class="btn-select plus" onclick="changeBetPerLine(5)">+</button>
+        <div class="controls">
+            <div style="color: #ff4d6d; font-weight: bold;">ВЫБЕРИТЕ КОЛИЧЕСТВО ЛИНИЙ:</div>
+            <div class="lines-selector">
+                <button class="line-btn">1 Линия</button>
+                <button class="line-btn">3 Линии</button>
+                <button class="line-btn" style="background: #06d6a0; color: #000;">5 Линий</button>
             </div>
-
-            <div id="total-bet-display">Общая ставка: 50 фишек</div>
-
-            <div style="margin-top: 10px;">
-                <button id="spin-btn" class="btn-main" onclick="startSpin()">СПИН</button>
-                <button id="auto-btn" class="btn-main" onclick="toggleAuto()">АВТО: ВЫКЛ</button>
-            </div>
+            
+            <div style="color: #e0aaff; font-size: 0.9rem; font-style: italic;">Текущая ставка: 50 фишек</div>
+            
+            <!-- Кнопка перезапускает CSS анимацию вращения при каждом нажатии -->
+            <button class="btn-main" onclick="location.reload()">СПИН 🎰</button>
         </div>
     </div>
 
-    <script>
-        let balance = 2000;
-        let isSpinning = false;
-        let autoMode = false;
-        
-        let selectedLines = 5;
-        let betPerLine = 10;
-        let totalBet = 50;
-
-        // Генерация случайных символов без использования методов массивов
-        function getRandomSymbol() {
-            let num = Math.floor(Math.random() * 7);
-            if (num === 0) return "7️⃣";
-            if (num === 1) return "💎";
-            if (num === 2) return "🔔";
-            if (num === 3) return "BAR";
-            if (num === 4) return "🍒";
-            if (num === 5) return "🍋";
-            return "🍇";
-        }
-
-        const grid = document.getElementById("slot-grid");
-        for (let i = 0; i < 9; i = i + 1) {
-            let cell = document.createElement("div");
-            cell.className = "slot-cell";
-            cell.innerText = "7️⃣";
-            cell.id = "c" + i;
-            grid.appendChild(cell);
-        }
-
-        function updateUI() {
-            totalBet = betPerLine * selectedLines;
-            document.getElementById("lines-display").innerText = "Линий: " + selectedLines;
-            document.getElementById("bet-display").innerText = "На линию: " + betPerLine;
-            document.getElementById("total-bet-display").innerText = "Общая ставка: " + totalBet + " фишек";
-            document.getElementById("balance-display").innerText = "Фишки: " + balance;
-        }
-
-        function changeLines(amount) {
-            if (isSpinning) return;
-            let nextLines = selectedLines + amount;
-            if (nextLines >= 1 && nextLines <= 5) {
-                selectedLines = nextLines;
-                updateUI();
-            }
-        }
-
-        function changeBetPerLine(amount) {
-            if (isSpinning) return;
-            let nextBet = betPerLine + amount;
-            if (nextBet >= 5 && nextBet <= 100) {
-                betPerLine = nextBet;
-                updateUI();
-            }
-        }
-
-        function toggleAuto() {
-            autoMode = !autoMode;
-            const btn = document.getElementById("auto-btn");
-            if (autoMode) {
-                btn.innerText = "АВТО: ВКЛ";
-                btn.classList.add("active");
-                if (!isSpinning) startSpin();
-            } else {
-                btn.innerText = "АВТО: ВЫКЛ";
-                btn.classList.remove("active");
-            }
-        }
-
-        function startSpin() {
-            if (isSpinning) return;
-            if (balance < totalBet) {
-                autoMode = false;
-                document.getElementById("auto-btn").innerText = "АВТО: ВЫКЛ";
-                document.getElementById("auto-btn").classList.remove("active");
-                alert("Фишки закончились! Начисляем бонусные 2000 фишек.");
-                balance = 2000;
-                updateUI();
-                return;
-            }
-
-            for (let i = 0; i < 9; i = i + 1) {
-                document.getElementById("c" + i).classList.remove("win-highlight");
-            }
-
-            isSpinning = true;
-            balance = balance - totalBet;
-            updateUI();
-
-            let count = 0;
-            let interval = setInterval(function() {
-                for (let i = 0; i < 9; i = i + 1) {
-                    document.getElementById("c" + i).innerText = getRandomSymbol();
-                }
-                count = count + 1;
-                if (count > 10) {
-                    clearInterval(interval);
-                    checkResults();
-                }
-            }, 100);
-        }
-
-        function checkResults() {
-            let v0 = document.getElementById("c0").innerText;
-            let v1 = document.getElementById("c1").innerText;
-            let v2 = document.getElementById("c2").innerText;
-            let v3 = document.getElementById("c3").innerText;
-            let v4 = document.getElementById("c4").innerText;
-            let v5 = document.getElementById("c5").innerText;
-            let v6 = document.getElementById("c6").innerText;
-            let v7 = document.getElementById("c7").innerText;
-            let v8 = document.getElementById("c8").innerText;
-
-            let winAmount = 0;
-
-            if (selectedLines >= 1) {
-                if (v0 === v1 && v1 === v2) {
-                    winAmount = winAmount + (betPerLine * 25);
-                    document.getElementById("c0").classList.add("win-highlight");
-                    document.getElementById("c1").classList.add("win-highlight");
-                    document.getElementById("c2").classList.add("win-highlight");
-                }
-            }
-            
-            if (selectedLines >= 2) {
-                if (v3 === v4 && v4 === v5) {
-                    winAmount = winAmount + (betPerLine * 25);
-                    document.getElementById("c3").classList.add("win-highlight");
-                    document.getElementById("c4").classList.add("win-highlight");
-                    document.getElementById("c5").classList.add("win-highlight");
-                }
-            }
-
-            if (selectedLines >= 3) {
-                if (v6 === v7 && v7 === v8) {
-                    winAmount = winAmount + (betPerLine * 25);
-                    document.getElementById("c6").classList.add("win-highlight");
-                    document.getElementById("c7").classList.add("win-highlight");
-Используйте код с осторожностью.
-document.getElementById("c8").classList.add("win-highlight");
-}
-}
-if (selectedLines >= 4) {
-if (v0 === v4 && v4 === v8) {
-winAmount = winAmount + (betPerLine * 40);
-document.getElementById("c0").classList.add("win-highlight");
-document.getElementById("c4").classList.add("win-highlight");
-document.getElementById("c8").classList.add("win-highlight");
-}
-}
-if (selectedLines >= 5) {
-if (v6 === v4 && v4 === v2) {
-winAmount = winAmount + (betPerLine * 40);
-document.getElementById("c6").classList.add("win-highlight");
-document.getElementById("c4").classList.add("win-highlight");
-document.getElementById("c2").classList.add("win-highlight");
-}
-}
-if (winAmount > 0) {
-balance = balance + winAmount;
-}
-updateUI();
-isSpinning = false;
-if (autoMode) {
-setTimeout(startSpin, 1000);
-}
-}
-
-
+</body>
+</html>
